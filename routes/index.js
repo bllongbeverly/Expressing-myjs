@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const routes = require('./routes');
+const { v4: uuidv4 } = require('uuid');
 
 // Serve static files from the "public" directory
 app.use(express.static('public'));
