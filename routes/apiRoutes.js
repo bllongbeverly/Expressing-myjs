@@ -1,91 +1,78 @@
-const fs = require('fs');
+const express = require("express");
+const router = express.Router();
+const fs = require("fs");
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-module.exports = function(app) {
-  // GET /api/notes should read the db.json file and return all saved notes as JSON
-  app.get('/api/notes', function(req, res) {
-    fs.readFile('db.json', 'utf8', function(err, data) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Failed to read notes.' });
-      }
-
-      let notes = [];
-      try {
-        notes = JSON.parse(data);
-      } catch (parseError) {
-        console.error(parseError);
-        return res.status(500).json({ error: 'Failed to parse notes.' });
-      }
-
-      return res.json(notes);
-    });
+// GET /api/notes - Read all notes from db.json and return as JSON
+router.get("/notes", (req, res) => {
+  fs.readFile(path.join(__dirname, '../db/db.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed doctype database." });
+    }
+    try {
+      const notes = JSON.parse(data);
+      res.json(notes);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Failed saved database." });
+    }
   });
+});
 
-  // POST /api/notes should receive a new note to save on the request body, add it to the db.json file,
-  // and then return the new note to the client
-  app.post('/api/notes', function(req, res) {
-    fs.readFile('db.json', 'utf8', function(err, data) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Failed to read notes.' });
-      }
-
-      let notes = [];
-      try {
-        notes = JSON.parse(data);
-      } catch (parseError) {
-        console.error(parseError);
-        return res.status(500).json({ error: 'Failed to parse notes.' });
-      }
-
-      const newNote = {
-        id: uuidv4(),
-        title: req.body.title,
-        text: req.body.text
-      };
-
+router.post('/notes', (req, res) => {
+  const newNote = req.body;
+  newNote.id = uuidv4();
+  fs.readFile(path.join(__dirname, '../db/db.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to read notes in database." });
+    }
+    try {
+      const notes = JSON.parse(data || "[]"); // Initialize empty array if data is empty
       notes.push(newNote);
-
-      fs.writeFile('db.json', JSON.stringify(notes), function(writeErr) {
-        if (writeErr) {
-          console.error(writeErr);
-          return res.status(500).json({ error: 'Failed to write notes.' });
+      fs.writeFile(path.join(__dirname, '../db/db.json'), JSON.stringify(notes), (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Failed to save note in database." });
         }
-
-        return res.json(newNote);
+        res.json(newNote);
       });
-    });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Failed to parse notes in database." });
+    }
   });
+});
 
-  // DELETE /api/notes/:id should receive a query parameter containing the id of a note to delete.
-  // It should remove the note with the given id property from the db.json file.
-  app.delete('/api/notes/:id', function(req, res) {
-    fs.readFile('db.json', 'utf8', function(err, data) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Failed to read notes.' });
+// DELETE /api/notes/:id - Delete a note from db.json with the given id
+router.delete("/notes/:id", (req, res) => {
+  const id = req.params.id;
+
+  fs.readFile(path.join(__dirname, '../db/db.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to read notes from database." });
+    }
+    try {
+      let notes = JSON.parse(data);
+      const updatedNotes = notes.filter((note) => note.id !== id);
+      if (notes.length === updatedNotes.length) {
+        return res.status(404).json({ error: "Note not found." });
       }
-
-      let notes = [];
-      try {
-        notes = JSON.parse(data);
-      } catch (parseError) {
-        console.error(parseError);
-        return res.status(500).json({ error: 'Failed to parse notes.' });
-      }
-
-      const noteId = req.params.id;
-      const updatedNotes = notes.filter(note => note.id !== noteId);
-
-      fs.writeFile('db.json', JSON.stringify(updatedNotes), function(writeErr) {
-        if (writeErr) {
-          console.error(writeErr);
-          return res.status(500).json({ error: 'Failed to write notes.' });
+      fs.writeFile(path.join(__dirname, '../db/db.json'), JSON.stringify(updatedNotes), (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Failed to delete notes from database." });
         }
-
-        return res.json({ message: 'Note deleted successfully.' });
+        res.sendStatus(204);
       });
-    });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Failed parse notes from database." });
+    }
   });
-};
+});
+
+module.exports = router;

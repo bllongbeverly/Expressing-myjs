@@ -3,13 +3,8 @@ const app = express();
 const port = 3001;
 const routes = require('./routes/index.js');
 
-// Serve static files from the "public" directory
 app.use(express.static('public'));
-
-// Middleware to parse JSON requests
 app.use(express.json());
-
-// Use the routes defined in routes.js
 app.use('/', routes);
 
 // Start the server
