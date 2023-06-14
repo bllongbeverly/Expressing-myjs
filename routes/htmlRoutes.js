@@ -3,12 +3,12 @@ const path = require("path");
 
 const router = express.Router();
 
-// GET /notes - Return the notes.html file
+// GET notes.html
 router.get("/notes", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/notes.html"));
 });
 
-// GET * - Return the index.html file
+// GET index.html 
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });

@@ -1,13 +1,17 @@
 const express = require('express');
+// get routes
+const apiRoutes = require('./routes/apiRoutes');
+const htmlRoutes = require('./routes/htmlRoutes');
+
+// initialize port
 const app = express();
-const port = 3001;
-const routes = require('./routes/index.js');
+const PORT = process.env.PORT || 3001;
 
-app.use(express.static('public'));
+// middleware
 app.use(express.json());
-app.use('/', routes);
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use('/api', apiRoutes);
+app.use('/', htmlRoutes);
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+app.listen(PORT, () => console.log(`Server now running `));

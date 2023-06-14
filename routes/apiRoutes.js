@@ -1,6 +1,6 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const fs = require("fs");
+const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
@@ -9,25 +9,26 @@ router.get("/notes", (req, res) => {
   fs.readFile(path.join(__dirname, '../db/db.json'), 'utf8', (err, data) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Failed doctype database." });
+      return res.status(500).json({ error: "Failed to read notes in the database." });
     }
     try {
-      const notes = JSON.parse(data);
+      const notes = JSON.parse(data || "[]"); // Initialize empty array if data is empty
       res.json(notes);
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ error: "Failed saved database." });
+      return res.status(500).json({ error: "Failed to parse notes in the database." });
     }
   });
 });
 
+// POST /api/notes - Add a new note to db.json
 router.post('/notes', (req, res) => {
   const newNote = req.body;
   newNote.id = uuidv4();
   fs.readFile(path.join(__dirname, '../db/db.json'), 'utf8', (err, data) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Failed to read notes in database." });
+      return res.status(500).json({ error: "Failed to read notes in the database." });
     }
     try {
       const notes = JSON.parse(data || "[]"); // Initialize empty array if data is empty
@@ -35,13 +36,13 @@ router.post('/notes', (req, res) => {
       fs.writeFile(path.join(__dirname, '../db/db.json'), JSON.stringify(notes), (err) => {
         if (err) {
           console.error(err);
-          return res.status(500).json({ error: "Failed to save note in database." });
+          return res.status(500).json({ error: "Failed to save note in the database." });
         }
         res.json(newNote);
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ error: "Failed to parse notes in database." });
+      return res.status(500).json({ error: "Failed to parse notes in the database." });
     }
   });
 });
